@@ -1,0 +1,88 @@
+# node_modules/
+# dist/
+# .env
+# .env.local
+# *.log
+# __pycache__/
+# *.py[cod]
+# .venv/
+# venv/
+
+# ===============================
+
+# NODE (Frontend + Backend)
+
+# ===============================
+
+node_modules/
+client/node_modules/
+server/node_modules/
+
+dist/
+client/dist/
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ===============================
+
+# PYTHON (Face Recognition API)
+
+# ===============================
+
+**pycache**/
+*.pyc
+*.pyo
+*.pyd
+
+venv/
+faceRecognitionAPI/venv/
+
+# ===============================
+
+# ENVIRONMENT VARIABLES (IMPORTANT)
+
+# ===============================
+
+.env
+*.env
+
+# ===============================
+
+# LOG FILES
+
+# ===============================
+
+*.log
+logs/
+
+# ===============================
+
+# OS FILES
+
+# ===============================
+
+.DS_Store
+Thumbs.db
+
+# ===============================
+
+# OPTIONAL (FACE DATA / UPLOADS)
+
+# ===============================
+
+dataset/
+datasets/
+images/
+uploads/
+
+# ===============================
+
+# BUILD / CACHE
+
+# ===============================
+
+.cache/
+.vscode/
+.idea/
