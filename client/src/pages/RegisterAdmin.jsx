@@ -106,7 +106,7 @@ export default function RegisterAdmin() {
         >
           {submitting ? 'Creating account…' : 'Register as administrator'}
         </button>
-        <p className="text-center text-sm text-slate-400">
+        {/* <p className="text-center text-sm text-slate-400">
           <Link to="/login" className="text-indigo-400 hover:text-indigo-300">
             Sign in
           </Link>
@@ -114,7 +114,7 @@ export default function RegisterAdmin() {
           <Link to="/register" className="text-indigo-400 hover:text-indigo-300">
             Member registration
           </Link>
-        </p>
+        </p> */}
       </form>
     </div>
   );

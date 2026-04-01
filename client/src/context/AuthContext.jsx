@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { api, getStoredToken, setAuthToken } from '../api/client';
 
@@ -41,11 +42,23 @@ export function AuthProvider({ children }) {
     return data;
   };
 
+  // Registration is a 2-step OTP flow.
+  // Step-1 returns a pendingId; Step-2 verifies OTP and then sets auth.
   const register = async (formData) => {
     const { data } = await api.post('/auth/register', formData);
+    return data;
+  };
+
+  const verifyRegistrationOtp = async (pendingId, otp) => {
+    const { data } = await api.post('/auth/verify-registration-otp', { pendingId, otp });
     setAuthToken(data.token);
     setUser(data.user);
     await loadSession();
+    return data;
+  };
+
+  const resendRegistrationOtp = async (pendingId) => {
+    const { data } = await api.post('/auth/resend-registration-otp', { pendingId });
     return data;
   };
 
@@ -72,6 +85,8 @@ export function AuthProvider({ children }) {
       loading,
       login,
       register,
+      verifyRegistrationOtp,
+      resendRegistrationOtp,
       registerAdmin,
       logout,
       refresh: loadSession,
@@ -91,3 +106,4 @@ export function useAuth() {
   }
   return ctx;
 }
+

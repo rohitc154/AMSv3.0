@@ -75,8 +75,15 @@ export default function Register() {
       faceBlobs.forEach((blob, i) => {
         fd.append('images', blob, `frame_${i}.jpg`);
       });
-      await register(fd);
-      navigate('/dashboard', { replace: true });
+      const data = await register(fd);
+      if (data?.pendingId) {
+        sessionStorage.setItem('pendingId', data.pendingId);
+        sessionStorage.setItem('pendingEmail', data.email || form.email.trim());
+        navigate('/verify-registration-otp', { replace: true });
+        return;
+      }
+      // Fallback (if server response shape changes)
+      navigate('/login', { replace: true });
     } catch (err) {
       const msg = err.response?.data?.message || err.response?.data?.detail || err.message;
       setError(typeof msg === 'string' ? msg : 'Registration failed');
@@ -94,7 +101,10 @@ export default function Register() {
           only.
         </p>
       </div>
-      <form onSubmit={handleSubmit} className="space-y-8 rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-8 rounded-2xl border border-slate-800 bg-slate-900/40 p-6"
+      >
         {error && (
           <div className="rounded-lg border border-red-900/60 bg-red-950/40 px-3 py-2 text-sm text-red-200">
             {error}
@@ -165,6 +175,7 @@ export default function Register() {
             />
           </label>
         </div>
+
         <div>
           <h2 className="mb-3 text-sm font-medium text-slate-200">Face capture</h2>
           <FaceCapture onFramesChange={setFaceBlobs} disabled={submitting} />
@@ -172,7 +183,9 @@ export default function Register() {
         <div className="flex flex-wrap items-center gap-3">
           <button
             type="submit"
-            disabled={submitting || faceBlobs.length < MIN_FRAMES || organizations.length === 0}
+            disabled={
+              submitting || faceBlobs.length < MIN_FRAMES || organizations.length === 0
+            }
             className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
           >
             {submitting ? 'Registering…' : 'Register'}

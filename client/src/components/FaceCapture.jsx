@@ -25,7 +25,7 @@ export function FaceCapture({ onFramesChange, disabled }) {
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
-      } catch (e) {
+      } catch {
         setError('Camera access denied or unavailable.');
       }
     }
