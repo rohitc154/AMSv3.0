@@ -179,7 +179,12 @@ export default function ForgotPassword() {
                 type="email"
                 required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setError('');     // 🔥 clear old error
+                  setMessage('');   // 🔥 clear old success
+                }}
+
                 className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white outline-none focus:border-indigo-500"
               />
             </label>
