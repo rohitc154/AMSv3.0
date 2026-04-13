@@ -21,6 +21,8 @@ export default function RegisterAdmin() {
   }
 
   if (user) {
+    // FIX #7: If already logged in as superAdmin, redirect to the right place
+    if (user.role === 'superAdmin') return <Navigate to="/super-admin" replace />;
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -35,7 +37,8 @@ export default function RegisterAdmin() {
         password: form.password,
         adminSecret: form.adminSecret,
       });
-      navigate('/dashboard', { replace: true });
+      // FIX #7: Navigate to /super-admin after successful super-admin registration
+      navigate('/super-admin', { replace: true });
     } catch (err) {
       const msg = err.response?.data?.message || err.message || 'Registration failed';
       setError(typeof msg === 'string' ? msg : 'Registration failed');
@@ -47,9 +50,9 @@ export default function RegisterAdmin() {
   return (
     <div className="mx-auto max-w-md px-4 py-12">
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-white">Application administrator</h1>
+        <h1 className="text-2xl font-semibold text-white">Super Administrator</h1>
         <p className="mt-1 text-sm text-slate-400">
-          Create organizations and set geofences. Requires the server{' '}
+          Create organizations and manage organization admins. Requires the server{' '}
           <code className="rounded bg-slate-800 px-1">ADMIN_REGISTRATION_SECRET</code>.
         </p>
       </div>
@@ -106,15 +109,6 @@ export default function RegisterAdmin() {
         >
           {submitting ? 'Creating account…' : 'Register as administrator'}
         </button>
-        {/* <p className="text-center text-sm text-slate-400">
-          <Link to="/login" className="text-indigo-400 hover:text-indigo-300">
-            Sign in
-          </Link>
-          {' · '}
-          <Link to="/register" className="text-indigo-400 hover:text-indigo-300">
-            Member registration
-          </Link>
-        </p> */}
       </form>
     </div>
   );

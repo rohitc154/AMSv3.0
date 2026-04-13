@@ -4,7 +4,7 @@ import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 
 export default function AttendancePage() {
-  const { user, isPlatformAdmin } = useAuth();
+  const { user, isMember } = useAuth();
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const [error, setError] = useState('');
@@ -13,7 +13,7 @@ export default function AttendancePage() {
   const [geo, setGeo] = useState(null);
 
   useEffect(() => {
-    if (isPlatformAdmin) return undefined;
+    if (!isMember) return undefined;
     let cancelled = false;
     async function cam() {
       try {
@@ -36,7 +36,7 @@ export default function AttendancePage() {
       cancelled = true;
       streamRef.current?.getTracks().forEach((t) => t.stop());
     };
-  }, [isPlatformAdmin]);
+  }, [isMember]);
 
   const captureBlob = useCallback(() => {
     const video = videoRef.current;
@@ -68,12 +68,11 @@ export default function AttendancePage() {
       );
     });
 
-  if (isPlatformAdmin) {
+  if (!isMember) {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center">
         <p className="text-slate-300">
-          Application administrators cannot mark attendance. Sign in as a member linked to an
-          organization.
+          Only organization members can mark attendance. Please sign in as a member.
         </p>
         <Link to="/dashboard" className="mt-6 inline-block text-indigo-400 hover:text-indigo-300">
           ← Back to dashboard

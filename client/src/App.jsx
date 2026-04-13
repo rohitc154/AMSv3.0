@@ -9,6 +9,8 @@ import AttendancePage from './pages/AttendancePage';
 import VerifyRegistrationOtp from './pages/VerifyRegistrationOtp';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import SuperAdminDashboard from './pages/SuperAdminDashboard';
+import OrgAdminDashboard from './pages/OrgAdminDashboard';
 
 function App() {
   return (
@@ -27,6 +29,22 @@ function App() {
             element={
               <PrivateRoute>
                 <Dashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/super-admin"
+            element={
+              <PrivateRoute requiredRole="superAdmin">
+                <SuperAdminDashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/org-admin"
+            element={
+              <PrivateRoute requiredRole="admin">
+                <OrgAdminDashboard />
               </PrivateRoute>
             }
           />

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLocation } from 'react-router-dom';
 
 export default function Login() {
   const { login, user, loading } = useAuth();
@@ -19,15 +20,30 @@ export default function Login() {
     );
   }
 
-  if (user) return <Navigate to="/dashboard" replace />;
+  const location = useLocation();
+
+  // If already logged in, redirect to the correct dashboard
+  if (user) {
+    const dest = getRoleDestination(user.role);
+    return <Navigate to={dest} replace />;
+  }
+
+  // FIX #1: Route to the correct dashboard based on role after login
+  function getRoleDestination(role) {
+    if (role === 'superAdmin') return '/super-admin';
+    if (role === 'admin') return '/org-admin';
+    return '/dashboard';
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
     setSubmitting(true);
     try {
-      await login(email, password);
-      navigate('/dashboard', { replace: true });
+      const data = await login(email, password);
+      // Route based on the role returned from login
+      const dest = getRoleDestination(data.user?.role);
+      navigate(dest, { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Login failed');
     } finally {
@@ -41,29 +57,25 @@ export default function Login() {
       {/* ── Left panel ── */}
       <div
         className="hidden w-5/12 flex-col items-center justify-center gap-6 px-12 py-16 md:flex"
-        // style={{ background: 'linear-gradient(145deg, #0d2a5e 0%, #0a1f4e 45%, #071540 100%)' }}
-        style={{ 
-              background: 'linear-gradient(180deg, #020817 0%, #020b1f 40%, #000611 100%)'
-
+        style={{
+          background: 'linear-gradient(180deg, #020817 0%, #020b1f 40%, #000611 100%)'
         }}
-        // style={{ backgroundColor: '#020c1b' }}
-
       >
         <div className="flex flex-col items-center gap-4">
           <svg width="80" height="80" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="36" cy="26" r="14" stroke="#4db8e8" strokeWidth="2" fill="none"/>
-            <line x1="22" y1="26" x2="50" y2="26" stroke="#4db8e8" strokeWidth="1.5"/>
-            <line x1="36" y1="12" x2="36" y2="40" stroke="#4db8e8" strokeWidth="1.5"/>
-            <line x1="24.1" y1="16.1" x2="47.9" y2="35.9" stroke="#4db8e8" strokeWidth="1.5"/>
-            <line x1="47.9" y1="16.1" x2="24.1" y2="35.9" stroke="#4db8e8" strokeWidth="1.5"/>
-            <circle cx="36" cy="26" r="3" fill="#4db8e8"/>
-            <circle cx="22" cy="26" r="2.5" stroke="#4db8e8" strokeWidth="1.5" fill="none"/>
-            <circle cx="50" cy="26" r="2.5" stroke="#4db8e8" strokeWidth="1.5" fill="none"/>
-            <circle cx="36" cy="12" r="2.5" stroke="#4db8e8" strokeWidth="1.5" fill="none"/>
-            <path d="M22 54 Q36 62 50 54" stroke="#4db8e8" strokeWidth="1.5" fill="none"/>
-            <path d="M18 46 Q36 38 54 46" stroke="#4db8e8" strokeWidth="1.5" fill="none"/>
-            <circle cx="50" cy="52" r="7" fill="none" stroke="#4db8e8" strokeWidth="1.5"/>
-            <polyline points="47,52 49.5,55 54,49" stroke="#4db8e8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+            <circle cx="36" cy="26" r="14" stroke="#4db8e8" strokeWidth="2" fill="none" />
+            <line x1="22" y1="26" x2="50" y2="26" stroke="#4db8e8" strokeWidth="1.5" />
+            <line x1="36" y1="12" x2="36" y2="40" stroke="#4db8e8" strokeWidth="1.5" />
+            <line x1="24.1" y1="16.1" x2="47.9" y2="35.9" stroke="#4db8e8" strokeWidth="1.5" />
+            <line x1="47.9" y1="16.1" x2="24.1" y2="35.9" stroke="#4db8e8" strokeWidth="1.5" />
+            <circle cx="36" cy="26" r="3" fill="#4db8e8" />
+            <circle cx="22" cy="26" r="2.5" stroke="#4db8e8" strokeWidth="1.5" fill="none" />
+            <circle cx="50" cy="26" r="2.5" stroke="#4db8e8" strokeWidth="1.5" fill="none" />
+            <circle cx="36" cy="12" r="2.5" stroke="#4db8e8" strokeWidth="1.5" fill="none" />
+            <path d="M22 54 Q36 62 50 54" stroke="#4db8e8" strokeWidth="1.5" fill="none" />
+            <path d="M18 46 Q36 38 54 46" stroke="#4db8e8" strokeWidth="1.5" fill="none" />
+            <circle cx="50" cy="52" r="7" fill="none" stroke="#4db8e8" strokeWidth="1.5" />
+            <polyline points="47,52 49.5,55 54,49" stroke="#4db8e8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
           </svg>
 
           <p className="text-[34px] font-bold tracking-tight">
@@ -80,10 +92,6 @@ export default function Login() {
         <p className="max-w-[260px] text-center text-[14px] leading-relaxed text-sky-300/80">
           AI-powered facial recognition for seamless, contactless attendance tracking in real time.
         </p>
-
-        {/* <button className="flex items-center gap-1.5 rounded-full border border-blue-800 px-6 py-2.5 text-[13px] text-sky-400 hover:bg-blue-900/30 transition-colors">
-          Learn More <span>↗</span>
-        </button> */}
       </div>
 
       {/* ── Right panel ── */}
@@ -149,13 +157,13 @@ export default function Login() {
           <p className="mt-6 text-center text-sm text-gray-400 leading-loose">
             Don't have an account?{' '}
             <Link to="/register" className="text-blue-500 hover:text-blue-400 font-medium">
-              Register
+              Register as member
             </Link>
             <br />
-            Admin?{' '}
-            <Link to="/register-admin" className="text-amber-500 hover:text-amber-400 font-medium">
-              Create admin account
-            </Link>
+            {/* Super Admin?{' '} */}
+            {/* <Link to="/register-admin" className="text-amber-500 hover:text-amber-400 font-medium">
+              Register here
+            </Link> */}
           </p>
         </div>
       </div>

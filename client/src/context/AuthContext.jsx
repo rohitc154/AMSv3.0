@@ -34,49 +34,57 @@ export function AuthProvider({ children }) {
     loadSession();
   }, [loadSession]);
 
-  const login = async (email, password) => {
+  const login = useCallback(async (email, password) => {
     const { data } = await api.post('/auth/login', { email, password });
     setAuthToken(data.token);
     setUser(data.user);
+    setOrganization(data.organization ?? null);
+    // Also refresh from /me to get the full user+org shape
     await loadSession();
     return data;
-  };
+  }, [loadSession]);
 
-  // Registration is a 2-step OTP flow.
-  // Step-1 returns a pendingId; Step-2 verifies OTP and then sets auth.
-  const register = async (formData) => {
+  const register = useCallback(async (formData) => {
     const { data } = await api.post('/auth/register', formData);
     return data;
-  };
+  }, []);
 
-  const verifyRegistrationOtp = async (pendingId, otp) => {
+  const verifyRegistrationOtp = useCallback(async (pendingId, otp) => {
     const { data } = await api.post('/auth/verify-registration-otp', { pendingId, otp });
     setAuthToken(data.token);
     setUser(data.user);
     await loadSession();
     return data;
-  };
+  }, [loadSession]);
 
-  const resendRegistrationOtp = async (pendingId) => {
+  const resendRegistrationOtp = useCallback(async (pendingId) => {
     const { data } = await api.post('/auth/resend-registration-otp', { pendingId });
     return data;
-  };
+  }, []);
 
-  const registerAdmin = async (body) => {
+  const registerAdmin = useCallback(async (body) => {
     const { data } = await api.post('/auth/register-admin', body);
     setAuthToken(data.token);
     setUser(data.user);
     await loadSession();
     return data;
-  };
+  }, [loadSession]);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setAuthToken(null);
     setUser(null);
     setOrganization(null);
-  };
+    window.location.href = '/login';
+  }, []);
 
-  const isPlatformAdmin = Boolean(user?.role === 'admin' && !user?.organizationId);
+  // FIX #2: Correct role checks
+  const isSuperAdmin = user?.role === 'superAdmin';
+  const isOrgAdmin = user?.role === 'admin' && Boolean(user?.organizationId);
+  const isMember = user?.role === 'member';
+  // Legacy: platform admin (old admin without organizationId — kept for Dashboard.jsx backward compat)
+  const isPlatformAdmin = user?.role === 'admin' && !user?.organizationId;
+  // FIX #2: isAdmin should be true for BOTH superAdmin and orgAdmin
+  const isAdmin = isSuperAdmin || isOrgAdmin;
 
   const value = useMemo(
     () => ({
@@ -90,10 +98,31 @@ export function AuthProvider({ children }) {
       registerAdmin,
       logout,
       refresh: loadSession,
-      isAdmin: user?.role === 'admin',
+      // Role checks
+      isSuperAdmin,
+      isOrgAdmin,
+      isMember,
+      isAdmin,
       isPlatformAdmin,
     }),
-    [user, organization, loading, loadSession, isPlatformAdmin]
+    // FIX #2: all stable callbacks and derived booleans included in deps
+    [
+      user,
+      organization,
+      loading,
+      login,
+      register,
+      verifyRegistrationOtp,
+      resendRegistrationOtp,
+      registerAdmin,
+      logout,
+      loadSession,
+      isSuperAdmin,
+      isOrgAdmin,
+      isMember,
+      isAdmin,
+      isPlatformAdmin,
+    ]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -106,4 +135,3 @@ export function useAuth() {
   }
   return ctx;
 }
-
