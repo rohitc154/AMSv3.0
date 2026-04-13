@@ -49,8 +49,8 @@ async function me(req, res, next) {
   }
 }
 
-/** Platform admin account (no organization; no face enrollment). Uses ADMIN_REGISTRATION_SECRET. */
-async function registerAdmin(req, res, next) {
+/** Super Admin account (platform-wide; no organization; no face enrollment). Uses ADMIN_REGISTRATION_SECRET. */
+async function registerSuperAdmin(req, res, next) {
   try {
     const { error, value } = registerAdminSchema.validate(req.body, {
       abortEarly: false,
@@ -78,7 +78,7 @@ async function registerAdmin(req, res, next) {
       name: value.name.trim(),
       email: value.email.toLowerCase().trim(),
       password: hashed,
-      role: "admin",
+      role: "superAdmin",
       faceEncodings: [],
     });
 
@@ -98,6 +98,11 @@ async function registerAdmin(req, res, next) {
   } catch (err) {
     next(err);
   }
+}
+
+/** Legacy: Platform admin registration (for backward compatibility) */
+async function registerAdmin(req, res, next) {
+  return registerSuperAdmin(req, res, next);
 }
 
 /** Member registration step-1: collect details + send OTP to email. */
@@ -507,11 +512,87 @@ async function resetPassword(req, res, next) {
   }
 }
 
+/**
+ * Create an organization admin (called by super admin)
+ * Email must be provided, and the admin is assigned to an organization.
+ * A temporary password is generated, and the admin can reset it after login.
+ */
+async function createOrganizationAdmin(req, res, next) {
+  try {
+    if (!mongoose.isValidObjectId(req.body.organizationId)) {
+      return res.status(400).json({ message: "Invalid organizationId" });
+    }
+
+    const org = await Organization.findById(req.body.organizationId);
+    if (!org) {
+      return res.status(404).json({ message: "Organization not found" });
+    }
+
+    const email = (req.body.email || "").toLowerCase().trim();
+    const name = (req.body.name || "").trim();
+
+    if (!email || !name) {
+      return res.status(400).json({ message: "Name and email are required" });
+    }
+
+    const existingEmail = await User.findOne({ email });
+    if (existingEmail) {
+      return res.status(409).json({ message: "Email already registered" });
+    }
+
+    // Check if organization already has an admin
+    const existingAdmin = await User.findOne({
+      organizationId: org._id,
+      role: "admin",
+    });
+    if (existingAdmin) {
+      return res.status(409).json({
+        message:
+          "Organization already has an admin. Remove the existing admin first.",
+      });
+    }
+
+    // Generate temporary password
+    const tempPassword = Math.random().toString(36).slice(-10);
+    const hashed = await bcrypt.hash(tempPassword, 12);
+
+    const user = await User.create({
+      name,
+      email,
+      password: hashed,
+      role: "admin",
+      organizationId: org._id,
+      faceEncodings: [],
+    });
+
+    // Update org adminId
+    org.adminId = user._id;
+    await org.save();
+
+    return res.status(201).json({
+      message: "Organization admin created successfully",
+      admin: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        organizationId: user.organizationId,
+        role: user.role,
+        temporaryPassword: tempPassword,
+        note: "Share this temporary password with the admin. They must reset it after first login.",
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   register,
   verifyRegistrationOtp,
   resendRegistrationOtp,
   registerAdmin,
+  registerSuperAdmin,
+  createOrganizationAdmin,
   login,
   me,
   forgotPassword,
