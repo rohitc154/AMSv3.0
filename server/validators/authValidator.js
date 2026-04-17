@@ -1,4 +1,4 @@
-const Joi = require('joi');
+const Joi = require("joi");
 
 const registerSchema = Joi.object({
   name: Joi.string().min(2).max(120).required(),
@@ -10,7 +10,9 @@ const registerSchema = Joi.object({
 
 const verifyRegistrationOtpSchema = Joi.object({
   pendingId: Joi.string().required(),
-  otp: Joi.string().pattern(/^\d{6}$/).required(),
+  otp: Joi.string()
+    .pattern(/^\d{6}$/)
+    .required(),
 });
 
 const resendRegistrationOtpSchema = Joi.object({
@@ -23,7 +25,9 @@ const forgotPasswordSchema = Joi.object({
 
 const resetPasswordSchema = Joi.object({
   email: Joi.string().email().required(),
-  otp: Joi.string().pattern(/^\d{6}$/).required(),
+  otp: Joi.string()
+    .pattern(/^\d{6}$/)
+    .required(),
   newPassword: Joi.string().min(8).max(128).required(),
 });
 
