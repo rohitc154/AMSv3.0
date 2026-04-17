@@ -39,11 +39,11 @@ app.use(errorHandler);
 async function start() {
   try {
     await connectDatabase();
-    app.listen(PORT, () => {
+    app.listen(PORT, "0.0.0.0", () => {
       console.log(`AMS API listening on port ${PORT}`);
     });
   } catch (err) {
-    console.error('Failed to start server', err);
+    console.error("Failed to start server", err);
     process.exit(1);
   }
 }
